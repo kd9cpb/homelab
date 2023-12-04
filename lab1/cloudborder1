@@ -1,0 +1,75 @@
+root@cloudborder1> show configuration
+## Last commit: 2020-10-25 03:18:45 UTC by root
+version 18.2R1.9;
+system {
+    root-authentication {
+        encrypted-password "omitted"; ## SECRET-DATA
+    }
+    host-name cloudborder1;
+    domain-name kd9cpb.com;
+    syslog {
+        user * {
+            any emergency;
+        }
+        file messages {
+            any notice;
+            authorization info;
+        }
+        file interactive-commands {
+            interactive-commands any;
+        }
+    }
+    processes {
+        dhcp-service {
+            traceoptions {
+                file dhcp_logfile size 10m;
+                level all;
+                flag packet;
+            }
+        }
+    }
+}
+chassis {
+    fpc 0 {
+        lite-mode;
+    }
+}
+interfaces {
+    interface-range vlan1 {
+        member-range ge-0/0/0 to ge-0/0/11;
+        unit 0 {
+            family bridge {
+                interface-mode access;
+                vlan-id 1;
+            }
+        }
+    }
+    fxp0 {
+        unit 0 {
+            family inet {
+                dhcp {
+                    vendor-id Juniper-vmx-VM5F949BC42D;
+                }
+            }
+        }
+    }
+    irb {
+        unit 1 {
+            family inet {
+                address 10.137.4.98/24;
+            }
+        }
+    }
+}
+protocols {
+    lldp {
+        interface all;
+    }
+}
+bridge-domains {
+    vlan1 {
+        domain-type bridge;
+        vlan-id 1;
+        routing-interface irb.1;
+    }
+}

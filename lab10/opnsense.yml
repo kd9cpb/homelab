@@ -1,0 +1,7 @@
+---
+- name: Push/Pull OPNsense config file
+  hosts: opnsense
+  gather_facts: false
+  become: true
+  roles:
+    - ansible-opnsense

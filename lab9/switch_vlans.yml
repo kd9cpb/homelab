@@ -1,0 +1,28 @@
+---
+- name: Configure 150 Vlans on our switch
+  hosts: condoswitch
+  gather_facts: false
+  tasks:
+    - name: Configure the Wireless vlans
+      arubanetworks.aos_switch.arubaoss_config:
+        lines:
+        - vlan {{ item }}
+        - name wireless_user-v{{ item }}
+        - tagged 3
+      with_sequence: start=100 end=149
+
+    - name: Configure the Server vlans
+      arubanetworks.aos_switch.arubaoss_config:
+        lines:
+        - vlan {{ item }}
+        - name server-v{{ item }}
+        - tagged 3
+      with_sequence: start=150 end=199
+
+    - name: Configure the Wired vlans
+      arubanetworks.aos_switch.arubaoss_config:
+        lines:
+        - vlan {{ item }}
+        - name wired_user-v{{ item }}
+        - tagged 3
+      with_sequence: start=200 end=249

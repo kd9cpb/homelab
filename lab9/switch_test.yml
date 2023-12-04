@@ -1,0 +1,9 @@
+---
+- name: Verify Ansible can SSH into the switch
+  hosts: condoswitch
+  gather_facts: false
+  tasks:
+    - name: Show the switch version
+      arubanetworks.aos_switch.arubaoss_command:
+        commands:
+        - show version

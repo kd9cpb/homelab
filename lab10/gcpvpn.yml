@@ -1,0 +1,31 @@
+---
+- name: Create VPN tunnel to GCP
+  hosts: localhost
+  gather_facts: false
+  vars:
+    public_ip: "{{ lookup('file', 'ipaddr.txt') }}"
+  tasks:
+    - name: Create tunnel
+      google.cloud.gcp_compute_vpn_tunnel:
+        name: vpn-opnsense
+        target_vpn_gateway:
+          selfLink: https://www.googleapis.com/compute/v1/projects/your_full_project_id/regions/us-central1/targetVpnGateways/vpn-1
+        shared_secret: not_the_real_key
+        local_traffic_selector: 10.140.0.0/16
+        remote_traffic_selector: 192.168.1.0/24
+        peer_ip: "{{ public_ip }}"
+        region: us-central1
+        project: your_full_project_id
+        auth_kind: serviceaccount
+        service_account_file: your_gcp_json_file.json
+    - name: Create Route
+      google.cloud.gcp_compute_route:
+        name: to-opnsense
+        next_hop_vpn_tunnel:
+          selfLink: https://www.googleapis.com/compute/v1/projects/your_full_project_id/regions/us-central1/vpnTunnels/vpn-opnsense
+        dest_range: 192.168.1.0/24
+        network: 
+          selfLink: https://www.googleapis.com/compute/v1/projects/your_full_project_id/global/networks/default
+        project: your_full_project_id
+        auth_kind: serviceaccount
+        service_account_file: your_gcp_json_file.json

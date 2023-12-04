@@ -1,0 +1,77 @@
+condoguest# sh run
+
+Running configuration:
+
+; J9727A Configuration Editor; Created on release #WB.16.10.0010
+; Ver #14:21.44.08.15.9b.3f.b3.b8.ee.34.79.3c.29.eb.9f.fc.f3.ff.37.ef:29
+
+hostname "condoguest"
+module 1 type j9727a
+class ipv4 "DNS"
+     10 match udp 0.0.0.0 255.255.255.255 0.0.0.0 255.255.255.255 eq 53
+   exit
+class ipv4 "DHCP"
+     10 match udp 0.0.0.0 255.255.255.255 0.0.0.0 255.255.255.255 eq 67
+   exit
+class ipv4 "ISE-WEB"
+     30 match tcp 0.0.0.0 255.255.255.255 10.137.4.100 0.0.0.0 eq 80
+     40 match tcp 0.0.0.0 255.255.255.255 10.137.4.100 0.0.0.0 eq 443
+     50 match tcp 0.0.0.0 255.255.255.255 10.137.4.100 0.0.0.0 eq 8443
+   exit
+class ipv4 "WEB-TRAFFIC"
+     10 match tcp 0.0.0.0 255.255.255.255 0.0.0.0 255.255.255.255 eq 80
+     20 match tcp 0.0.0.0 255.255.255.255 0.0.0.0 255.255.255.255 eq 443
+   exit
+class ipv4 "GUEST_ACCESS"
+     40 match ip 0.0.0.0 255.255.255.255 0.0.0.0 255.255.255.255
+   exit
+class ipv4 "BLOCK_INTERNAL"
+     10 match ip 0.0.0.0 255.255.255.255 10.0.0.0 0.255.255.255
+     20 match ip 0.0.0.0 255.255.255.255 192.168.0.0 0.0.255.255
+     30 match ip 0.0.0.0 255.255.255.255 172.16.0.0 0.15.255.255
+   exit
+policy user "GUEST_ACCESS"
+     10 class ipv4 "BLOCK_INTERNAL" action deny
+     20 class ipv4 "GUEST_ACCESS" action permit
+   exit
+policy user "ISE-REDIRECT"
+     10 class ipv4 "DNS" action permit
+     20 class ipv4 "DHCP" action permit
+     30 class ipv4 "ISE-WEB" action permit
+     40 class ipv4 "WEB-TRAFFIC" action redirect captive-portal
+   exit
+radius-server host 10.137.4.100 dyn-authorization
+radius-server host 10.137.4.100 time-window 0
+radius-server key "RidiculousRadiusKey2020!!"
+ip authorized-managers 10.139.146.0 255.255.255.0 access manager
+ip default-gateway 10.139.146.1
+ip ssh listen data
+snmp-server community "public" unrestricted
+aaa accounting network start-stop radius
+aaa authorization user-role name "Guest_Access"
+   policy "GUEST_ACCESS"
+   exit
+aaa authorization user-role name "ISE-CAP-PORTAL"
+   captive-portal-profile "use-radius-vsa"
+   policy "ISE-REDIRECT"
+   exit
+aaa authorization user-role enable
+aaa authentication login privilege-mode
+aaa authentication port-access eap-radius
+aaa authentication local-user "tcostello" group "Level-15"
+aaa authentication captive-portal enable
+aaa port-access mac-based 12-24
+oobm
+   ip address dhcp-bootp
+   exit
+vlan 1
+   name "DEFAULT_VLAN"
+   no untagged 2,12-24
+   untagged 1,3-11
+   ip address 10.139.146.3 255.255.255.0
+   exit
+vlan 2
+   name "GUEST"
+   untagged 2,12-24
+   ip address 10.202.11.2 255.255.255.0
+   exit

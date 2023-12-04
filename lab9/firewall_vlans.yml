@@ -1,0 +1,34 @@
+---
+- name: Configure 150 Vlans on our ASA
+  hosts: condoasa
+  gather_facts: false
+  tasks:
+    - name: Configure the Wireless vlans
+      cisco.asa.asa_config:
+        lines:
+        - interface GigabitEthernet0/3.{{ item }}
+        - vlan {{ item }}
+        - nameif wireless_user-v{{ item }}
+        - ip address 10.1.{{ item }}.1 255.255.255.0
+        - security-level 75
+      with_sequence: start=100 end=149
+
+    - name: Configure the Server vlans
+      cisco.asa.asa_config:
+        lines:
+        - interface GigabitEthernet0/3.{{ item }}
+        - vlan {{ item }}
+        - nameif server-v{{ item }}
+        - ip address 10.1.{{ item }}.1 255.255.255.0
+        - security-level 75
+      with_sequence: start=150 end=199
+
+    - name: Configure the Wired vlans
+      cisco.asa.asa_config:
+        lines:
+        - interface GigabitEthernet0/3.{{ item }}
+        - vlan {{ item }}
+        - nameif wired_user-v{{ item }}
+        - ip address 10.1.{{ item }}.1 255.255.255.0
+        - security-level 75
+      with_sequence: start=200 end=249

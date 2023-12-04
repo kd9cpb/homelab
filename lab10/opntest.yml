@@ -1,0 +1,7 @@
+---
+- name: Verify Ansible can SSH into OPNsense
+  hosts: opnsense
+  gather_facts: false
+  become: true
+  roles:
+    - ansible-opnsense

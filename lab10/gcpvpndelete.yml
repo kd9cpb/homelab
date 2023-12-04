@@ -1,0 +1,14 @@
+---
+- name: Delete VPN tunnel to GCP
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Delete tunnel
+      google.cloud.gcp_compute_vpn_tunnel:
+        name: vpn-opnsense
+        state: absent
+        region: us-central1
+        shared_secret: not_the_real_key 
+        project: your_full_project_id
+        auth_kind: serviceaccount
+        service_account_file: your_gcp_json_file.json

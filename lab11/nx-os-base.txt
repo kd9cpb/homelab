@@ -1,0 +1,9 @@
+feature interface-vlan
+interface vlan 1
+ip addr 10.140.2.3/24
+no shut
+desc demo_vlan
+ip route 0.0.0.0/0 10.140.2.1
+username netmiko password Netmiko1! role network-admin
+hostname cloudborder2
+ip domain-name kd9cpb.com

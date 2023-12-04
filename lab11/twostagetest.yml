@@ -1,0 +1,11 @@
+- name: test applying a dual-stage config 
+  hosts: cloudborder2
+  gather_facts: false
+  tasks:
+    - name: test changing an interface desc
+      cisco.nxos.nxos_command:
+        commands: 
+        - config dual-stage
+        - interface eth1/5
+        - desc crazy_port_name_from_ansible
+        - commit confirmed 300

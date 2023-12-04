@@ -1,0 +1,223 @@
+condoasa# sh run
+: Saved
+
+:
+: Serial Number: (omitted)
+: Hardware:   ASA5512, 4096 MB RAM, CPU Clarkdale 2792 MHz, 1 CPU (2 cores)
+:
+ASA Version 9.8(4)29
+!
+hostname condoasa
+domain-name kd9cpb.com
+enable password (omitted)
+names
+no mac-address auto
+
+!
+interface GigabitEthernet0/0
+ nameif outside
+ security-level 0
+ ip address dhcp setroute
+!
+interface GigabitEthernet0/1
+ nameif inside
+ security-level 100
+ ip address 10.139.146.1 255.255.255.0
+!
+interface GigabitEthernet0/2
+ nameif guest
+ security-level 99
+ ip address 10.202.11.1 255.255.255.0
+!
+interface GigabitEthernet0/3
+ shutdown
+ no nameif
+ no security-level
+ no ip address
+!
+interface GigabitEthernet0/4
+ shutdown
+ no nameif
+ no security-level
+ no ip address
+!
+interface GigabitEthernet0/5
+ shutdown
+ no nameif
+ no security-level
+ no ip address
+!
+interface Management0/0
+ management-only
+ shutdown
+ no nameif
+ no security-level
+ no ip address
+!
+interface Tunnel10
+ nameif gcp-if-0
+ ip address 169.254.0.2 255.255.255.252
+ tunnel source interface outside
+ tunnel destination 35.242.124.40
+ tunnel mode ipsec ipv4
+ tunnel protection ipsec profile GCP
+!
+ftp mode passive
+dns server-group DefaultDNS
+ domain-name kd9cpb.com
+access-list GCP-IN extended permit ip any any
+pager lines 24
+mtu outside 1500
+mtu inside 1500
+mtu guest 1500
+no failover
+no failover wait-disable
+no monitor-interface service-module
+icmp unreachable rate-limit 1 burst-size 1
+no asdm history enable
+arp timeout 14400
+no arp permit-nonconnected
+arp rate-limit 8192
+!
+nat (inside,outside) after-auto source dynamic any interface
+nat (guest,outside) after-auto source dynamic any interface
+access-group GCP-IN in interface gcp-if-0 control-plane
+access-group GCP-IN in interface gcp-if-0
+!
+prefix-list GCP-IN seq 6 permit 10.137.2.0/24 le 32
+prefix-list GCP-IN seq 10 permit 10.137.4.0/24 le 32
+!
+router bgp 64513
+ bgp log-neighbor-changes
+ bgp graceful-restart
+ bgp router-id 10.139.146.1
+ address-family ipv4 unicast
+  neighbor 169.254.0.1 remote-as 64512
+  neighbor 169.254.0.1 ebgp-multihop 2
+  neighbor 169.254.0.1 activate
+  neighbor 169.254.0.1 prefix-list GCP-IN in
+  network 10.202.11.0 mask 255.255.255.0
+  network 10.139.146.0 mask 255.255.255.0
+  maximum-paths 2
+  no auto-summary
+  no synchronization
+ exit-address-family
+!
+timeout xlate 3:00:00
+timeout pat-xlate 0:00:30
+timeout conn 1:00:00 half-closed 0:10:00 udp 0:02:00 sctp 0:02:00 icmp 0:00:02
+timeout sunrpc 0:10:00 h323 0:05:00 h225 1:00:00 mgcp 0:05:00 mgcp-pat 0:05:00
+timeout sip 0:30:00 sip_media 0:02:00 sip-invite 0:03:00 sip-disconnect 0:02:00
+timeout sip-provisional-media 0:02:00 uauth 0:05:00 absolute
+timeout tcp-proxy-reassembly 0:01:00
+timeout floating-conn 0:00:00
+timeout conn-holddown 0:00:15
+timeout igp stale-route 0:01:10
+user-identity default-domain LOCAL
+aaa authentication ssh console LOCAL
+aaa authentication login-history
+http server enable
+http 10.139.146.0 255.255.255.0 inside
+no snmp-server location
+no snmp-server contact
+crypto ipsec ikev2 ipsec-proposal GCP
+ protocol esp encryption aes-gcm-256
+ protocol esp integrity sha-512
+crypto ipsec profile GCP
+ set ikev2 ipsec-proposal GCP
+ set pfs group14
+ set security-association lifetime kilobytes unlimited
+ set security-association lifetime seconds 10800
+crypto ipsec security-association pmtu-aging infinite
+crypto ca trustpool policy
+crypto ikev2 policy 10
+ encryption aes-gcm-256
+ integrity null
+ group 14
+ prf sha512 sha384 sha256 sha
+ lifetime seconds 36000
+crypto ikev2 enable outside
+telnet timeout 5
+ssh stricthostkeycheck
+ssh 10.139.146.0 255.255.255.0 inside
+ssh timeout 5
+ssh version 2
+ssh key-exchange group dh-group14-sha1
+console timeout 0
+dhcpd address 10.139.146.50-10.139.146.75 inside
+dhcpd dns 8.8.8.8 4.4.2.2 interface inside
+dhcpd enable inside
+!
+dhcpd address 10.202.11.10-10.202.11.50 guest
+dhcpd dns 8.8.8.8 4.4.2.2 interface guest
+dhcpd enable guest
+!
+threat-detection basic-threat
+threat-detection statistics access-list
+no threat-detection statistics tcp-intercept
+group-policy GCP internal
+group-policy GCP attributes
+ vpn-tunnel-protocol ikev2
+dynamic-access-policy-record DfltAccessPolicy
+username tcostello password (omitted)
+tunnel-group 35.242.124.40 type ipsec-l2l
+tunnel-group 35.242.124.40 general-attributes
+ default-group-policy GCP
+tunnel-group 35.242.124.40 ipsec-attributes
+ isakmp keepalive threshold 10 retry 3
+ ikev2 remote-authentication pre-shared-key *****
+ ikev2 local-authentication pre-shared-key *****
+!
+class-map inspection_default
+ match default-inspection-traffic
+!
+!
+policy-map type inspect dns preset_dns_map
+ parameters
+  message-length maximum client auto
+  message-length maximum 512
+  no tcp-inspection
+policy-map global_policy
+ class inspection_default
+  inspect ftp
+  inspect h323 h225
+  inspect h323 ras
+  inspect ip-options
+  inspect netbios
+  inspect rsh
+  inspect rtsp
+  inspect skinny
+  inspect esmtp
+  inspect sqlnet
+  inspect sunrpc
+  inspect tftp
+  inspect sip
+  inspect xdmcp
+  inspect dns preset_dns_map
+policy-map type inspect dns migrated_dns_map_2
+ parameters
+  message-length maximum client auto
+  message-length maximum 512
+  no tcp-inspection
+policy-map type inspect dns migrated_dns_map_1
+ parameters
+  message-length maximum client auto
+  message-length maximum 512
+  no tcp-inspection
+!
+service-policy global_policy global
+prompt hostname context
+no call-home reporting anonymous
+call-home
+ profile CiscoTAC-1
+  no active
+  destination address http https://tools.cisco.com/its/service/oddce/services/DDCEService
+  destination address email callhome@cisco.com
+  destination transport-method http
+  subscribe-to-alert-group diagnostic
+  subscribe-to-alert-group environment
+  subscribe-to-alert-group inventory periodic monthly
+  subscribe-to-alert-group configuration periodic monthly
+  subscribe-to-alert-group telemetry periodic daily
+Cryptochecksum:8d4873fcf8a7d7e21d447077f9936ab7
+: end

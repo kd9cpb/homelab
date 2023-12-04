@@ -1,0 +1,20 @@
+; J9727A Configuration Editor; Created on release #WB.16.10.0010
+; Ver #14:21.44.08.15.9b.3f.b3.b8.ee.34.79.3c.29.eb.9f.fc.f3.ff.37.ef:29
+
+hostname "condoguest"
+module 1 type j9727a
+ip authorized-managers 10.139.146.0 255.255.255.0 access manager
+ip default-gateway 10.139.146.1
+ip ssh listen data
+snmp-server community "public" unrestricted
+aaa authentication login privilege-mode
+aaa authentication local-user "tcostello" group "Level-15"
+oobm
+   ip address dhcp-bootp
+   exit
+vlan 1
+   name "DEFAULT_VLAN"
+   untagged 1-24
+   ip address 10.139.146.3 255.255.255.0
+   exit
+

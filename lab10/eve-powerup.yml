@@ -1,0 +1,13 @@
+---
+- name: turn on eve-ng instance
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: turn on eve-ng instance
+      google.cloud.gcp_compute_instance:
+        name: eveng
+        status: RUNNING
+        zone: us-central1-a
+        project: your_full_project_id
+        auth_kind: serviceaccount
+        service_account_file: your_gcp_json_file.json

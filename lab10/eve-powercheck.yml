@@ -1,0 +1,13 @@
+---
+- name: validate eve-ng instance is off
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: turn off eve-ng instance
+      google.cloud.gcp_compute_instance:
+        name: eveng
+        status: TERMINATED
+        zone: us-central1-a
+        project: your_full_project_id
+        auth_kind: serviceaccount
+        service_account_file: your_gcp_json_file.json

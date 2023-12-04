@@ -1,0 +1,9 @@
+---
+- name: Verify Ansible can SSH into the ASA
+  hosts: condoasa
+  gather_facts: false
+  tasks:
+    - name: Show the ASA hostname
+      cisco.asa.asa_command:
+        commands:
+        - show hostname
